@@ -1,69 +1,31 @@
-### uncorrelated noise case
-python  run.py -l 'MSE_data' -grid_size 3  --angles 16 --number_training_imgs 1000  --learning_rate 0.0001 -i --method 'P2P' --batch_size 32 --noise_intensity 6000
-python  run.py -l 'MSE_data' -grid_size 3  --angles 16 --number_training_imgs 1000  --learning_rate 0.0001 -i --method 'S2I' --batch_size 32 --noise_intensity 6000
-python  run_doublesplit.py -l 'MSE_data' -grid_size 3  --angles 16 --number_training_imgs 1000  --learning_rate 0.0001 -i --method 'S2I_ds' --batch_size 32 --noise_intensity 6000
+### training commands used in paper
 
+python  run.py -l 'MSE_data' -grid_size 3  --angles 100   --learning_rate 0.0001 -i --method 'S2I' --batch_size 4 
+python  run.py -l 'MSE_data' -grid_size 3  --angles 100   --learning_rate 0.0001 -i --method 'P2P' --batch_size 4 
+python  run_doublesplit.py -l 'MSE_data' -grid_size 3  --angles 100  --learning_rate 0.0001 -i --method 'S2I_ds' --batch_size 4 
 
+### inference examples
 python inference.py \
     -l MSE_data \
-    -grid_size 3 \
-    --angles 16 \
-    --learning_rate 0.0001 \
-    -i \
-    --method P2P \
-    --noise_intensity 6000
-
-    python inference.py \
-    -l MSE_data \
-    -grid_size 3 \
-    --angles 16 \
+    --grid_size 3 \
+    --angles 100 \
     --learning_rate 0.0001 \
     -i \
     --method S2I \
-    --noise_intensity 6000
-
-
-    python inference.py \
-    -l MSE_data \
-    -grid_size 3 \
-    --angles 16 \
-    --learning_rate 0.0001 \
-    -i \
-    --method S2I_ds \
-    --noise_intensity 6000
-
-
-
-    ### correlated noise case
-python  run.py -l 'MSE_data' -grid_size 3  --angles 16 --number_training_imgs 1000  --learning_rate 0.0001 -i --method 'P2P' --batch_size 32 --correlated_noise 
-python  run.py -l 'MSE_data' -grid_size 3  --angles 16 --number_training_imgs 1000  --learning_rate 0.0001 -i --method 'S2I' --batch_size 32 --correlated_noise
-python  run_doublesplit.py -l 'MSE_data' -grid_size 3  --angles 16 --number_training_imgs 1000  --learning_rate 0.0001 -i --method 'S2I_ds' --batch_size 32 --correlated_noise
-
 
 python inference.py \
     -l MSE_data \
-    -grid_size 3 \
-    --angles 16 \
+    --grid_size 3 \
+    --angles 100 \
     --learning_rate 0.0001 \
     -i \
     --method P2P \
-    --correlated_noise 
 
-    python inference.py \
+python inference.py \
     -l MSE_data \
-    -grid_size 3 \
-    --angles 16 \
-    --learning_rate 0.0001 \
-    -i \
-    --method S2I \
-    --correlated_noise 
-
-
-    python inference.py \
-    -l MSE_data \
-    -grid_size 3 \
-    --angles 16 \
+    --grid_size 3 \
+    --angles 100 \
     --learning_rate 0.0001 \
     -i \
     --method S2I_ds \
-    --correlated_noise 
+
