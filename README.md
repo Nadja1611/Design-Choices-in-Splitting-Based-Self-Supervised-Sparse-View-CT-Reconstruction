@@ -87,7 +87,6 @@ corresponding directory so that local imports such as `models` and `utils`
 resolve to the correct implementation.
 
 ---
-
 ## Getting Started
 
 ### 1. Clone the repository
@@ -105,6 +104,37 @@ install the remaining dependencies required by the selected dataset pipeline.
 The code uses packages including PyTorch, NumPy, SciPy, scikit-image,
 Matplotlib, LPIPS, PIQ, Tomosipo, and LION.
 
+#### Install LION
+
+This repository imports CT geometry and utility functions from
+[LION](https://github.com/CambridgeCIA/LION). The official installation
+procedure is:
+
+```bash
+git clone https://github.com/CambridgeCIA/LION.git
+cd LION
+git submodule update --init --recursive
+
+conda env create --file=env_base.yml --name=lion
+conda activate lion
+
+python -m pip install torch torchvision     --index-url https://download.pytorch.org/whl/cu128
+
+pip install .
+```
+
+The CUDA version in the PyTorch installation command must match the
+`cuda-version` specified in `env_base.yml` and the CUDA installation available
+on the system. For a different CUDA release, update both accordingly.
+
+For an editable development installation, replace the final command with:
+
+```bash
+pip install -e ".[dev]"
+```
+
+After installing LION, return to this repository and install any remaining
+project-specific dependencies in the same Conda environment.
 ### 3. Select the experiment pipeline
 
 For LoDoPaB-CT experiments:
