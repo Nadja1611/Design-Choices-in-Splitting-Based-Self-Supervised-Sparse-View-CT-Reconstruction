@@ -1,5 +1,30 @@
-
+###training
 
 python  run.py -l 'MSE_data' -grid_size 3  --angles 100   --learning_rate 0.0001 -i --method 'S2I' --batch_size 4 
 python  run.py -l 'MSE_data' -grid_size 3  --angles 100   --learning_rate 0.0001 -i --method 'P2P' --batch_size 4 
 python  run_doublesplit.py -l 'MSE_data' -grid_size 3  --angles 100  --learning_rate 0.0001 -i --method 'S2I_ds' --batch_size 4 
+
+### inference 
+python inference.py \
+    -l MSE_data \
+    --grid_size 3 \
+    --angles 100 \
+    --learning_rate 0.0001 \
+    -i \
+    --method S2I
+
+python inference.py \
+    -l MSE_data \
+    --grid_size 3 \
+    --angles 100 \
+    --learning_rate 0.0001 \
+    -i \
+    --method P2P 
+
+python inference.py \
+    -l MSE_data \
+    --grid_size 3 \
+    --angles 100 \
+    --learning_rate 0.0001 \
+    -i \
+    --method S2I_ds 
