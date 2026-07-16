@@ -61,7 +61,8 @@ Design-Choices-in-Splitting-Based-Self-Supervised-Sparse-View-CT-Reconstruction/
 │   │   └── CT operators, losses, validation, metrics, and shared utilities
 │   └── utils_lodopab.py
 │       └── LoDoPaB-specific data loading and preprocessing utilities
-│
+│    └── run commands
+        └── Example commands for running lodopab experiments
 └── 2DeteCT/
     ├── run.py
     │   └── Training entry point for S2I and P2P on 2DeteCT
