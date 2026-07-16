@@ -20,7 +20,7 @@ from tomosipo.torch_support import (
     to_autograd,
 )
 import lpips
-from models_2detect import *
+from models import *
 from torch.optim import lr_scheduler
 from torch.utils.data import TensorDataset, DataLoader
 from itertools import combinations
@@ -34,10 +34,8 @@ from scipy.ndimage import gaussian_filter
 from torchvision import transforms
 import gc
 from skimage.metrics import structural_similarity, peak_signal_noise_ratio
-from utils_2detect import * 
+from utils import * 
 from torch.utils.tensorboard import SummaryWriter
-from utils_lodopab import get_images_from_pt
-
 
 
 # %%
@@ -51,7 +49,6 @@ parser.add_argument(
     help="which loss variant should be used? Options are MSE_data, MSE_image, Sobolev_data",
     default="Sobolev_data",
 )
-
 parser.add_argument(
     "-a",
     "--a",
@@ -66,16 +63,6 @@ parser.add_argument(
     help="parameter s in sobolev norm",
     default=1.,
 )
-
-
-
-parser.add_argument(
-    "-gaussian_noise_std",
-    "--gaussian_noise_std",
-    type=float,
-    help="The power of noise that is added to the data",
-    default=.1,
-)
 parser.add_argument(
     "-angles",
     "--angles",
@@ -83,7 +70,6 @@ parser.add_argument(
     help="number of prosqueuejection angles sinogram",
     default=16,
 )
-
 parser.add_argument(
     "-lr",
     "--learning_rate",
@@ -106,29 +92,11 @@ parser.add_argument(
     default="no",
 )
 parser.add_argument(
-    "-noise_intensity",
-    "--noise_intensity",
-    type=float,
-    help="The power of noise that is added to the data",
-    default=2.,
-)
-
-
-parser.add_argument(
-    "--correlated_noise",
-    action="store_true",
-    help="Enable correlated Poisson noise via 1D convolution along angle dimension"
-)
-
-parser.add_argument(
     "-method",
     "--method",
     type = str,
     help="choose splitting that should be used, S2I , P2P, S2I_ds are the options",
     default = "S2I")
-
-
-
 
 parser.add_argument(
     "-inference",
@@ -159,49 +127,28 @@ parser.add_argument(
     help="grid size (either one number or multiple for random choice)",
     default=[3]
 )
-
-
 parser.add_argument(
     "-show_images",
     "--show_images",
     type = bool,
     help = "1 to show images and 0 to save them",
     default = False)
-
-parser.add_argument(
-    "-use_2detect",
-    "--use_2detect",
-    type = bool,
-    help = "do we work with 2detect data?",
-    default = True)
-
-
 parser.add_argument(
     "-mode",
     "--mode",
     type = str,
     help="which mode of 2detect data should be used, mode1 or mode2",
     default = "mode1")
-
 parser.add_argument(
     "-i", "--fill_zeros",
     action="store_true",
     help="enable interpolation in angular direction"
 )
-
 parser.add_argument(
     "-r", "--random_mask",
     action="store_true",
     help="enable random masking"
 )
-
-parser.add_argument(
-    "-number_training_imgs",
-    "--number_training_imgs",
-    type = int,
-    help="number of images used for training",
-    default = 1000)
-
 
 
 
@@ -218,7 +165,6 @@ number_angles = args.angles
 device = args.device
 loss_variant = args.loss_variant
 batch_size = args.batch_size
-n_img = args.number_training_imgs
 
 mode = args.mode
 print('random and fill', args.random_mask, args.fill_zeros, flush = True)
@@ -226,39 +172,22 @@ print('random and fill', args.random_mask, args.fill_zeros, flush = True)
 '>>-------------------------------------------------------------------------<<'
 ' Loading and augmenting image data. Computing sinograms'
 '>>-------------------------------------------------------------------------<<'
-if args.use_2detect:
 
-    path_sinos = rf"../all_sinograms_{mode}"
-    sinograms = load_sinograms_to_tensor(path_sinos, nr_angles = args.angles)
-    sinograms = sinograms.unsqueeze(1)
-    print(sinograms.shape, flush = True)
-    sinograms_test = sinograms[950:]
-    sinograms = sinograms[:100]
+path_sinos = rf"../all_sinograms_{mode}"
+sinograms = load_sinograms_to_tensor(path_sinos, nr_angles = args.angles)
+sinograms = sinograms.unsqueeze(1)
+print(sinograms.shape, flush = True)
+sinograms_test = sinograms[950:]
+sinograms = sinograms[:100]
 
-    path_reco = rf"../all_reconstructions_{mode}"
-    images = load_reconstructions_to_tensor(path_reco)
-    images_training = images[:100]
-    images_test = images[950:]
-    print('NR of images ', images_training.shape, images_test.shape, flush = True)
+path_reco = rf"../all_reconstructions_{mode}"
+images = load_reconstructions_to_tensor(path_reco)
+images_training = images[:100]
+images_test = images[950:]
+print('NR of images ', images_training.shape, images_test.shape, flush = True)
 
-    del(images)
-else:
-    path = r"/home/nadja/Documents/Projects/gt_pt"
-    images = get_images_from_pt(path, amount_of_images='all', scale_number=1)
-    images = rescale_images(images, device, target_size = (np.shape(images)[0],336,336))
-    print(images.shape, flush = True)
-    #### we ha e 3584 images in total
-    print(n_img)
-    images_training = images[584:584+n_img]
-    images_test = images[400:584]
+del(images)
 
-    print('NR of images ', images_training.shape, images_test.shape, flush = True)
-    sinograms = torch.tensor(
-        create_noisy_sinograms_poisson(images_training, number_angles, photon_count=args.noise_intensity, correlated_noise=args.correlated_noise, gaussian_noise_std = args.gaussian_noise_std)
-    )
-    sinograms_test = torch.tensor(
-        create_noisy_sinograms_poisson(images_test, number_angles, photon_count=args.noise_intensity, correlated_noise=args.correlated_noise, gaussian_noise_std = args.gaussian_noise_std)
-    )
 '>>-------------------------------------------------------------------------<<'
 ' Adding noise to the projection data'
 '>>-------------------------------------------------------------------------<<'
@@ -270,45 +199,44 @@ proj_noisy_test = sinograms_test
 '>>-------------------------------------------------------------------------<<'
 ' Generating dataset'
 '>>-------------------------------------------------------------------------<<'
-if args.use_2detect:
     # --- 1. Ensure both Tensors are 4D [N, 1, H, W] ---
     # (Assuming images and sinograms are loaded as shown in your previous snippet)
-    images_training = images_training.unsqueeze(1)    # Shape: [800, 1, 336, 336]
-    images_test = images_test.unsqueeze(1)        # Shape: [N_test, 1, 336, 336]
+images_training = images_training.unsqueeze(1)    # Shape: [800, 1, 336, 336]
+images_test = images_test.unsqueeze(1)        # Shape: [N_test, 1, 336, 336]
 
 
-    # --- 2. Per-Image Normalization for Training Set ---
-    # Find the max value for each reconstruction image across dims 2 and 3
-    # keepdim=True ensures the shape is [800, 1, 1, 1], allowing flawless broadcasting
-    reco_train_maxs = images_training.max(dim=2, keepdim=True)[0].max(dim=3, keepdim=True)[0]
+# --- 2. Per-Image Normalization for Training Set ---
+# Find the max value for each reconstruction image across dims 2 and 3
+# keepdim=True ensures the shape is [800, 1, 1, 1], allowing flawless broadcasting
+reco_train_maxs = images_training.max(dim=2, keepdim=True)[0].max(dim=3, keepdim=True)[0]
 
-    # Add a tiny epsilon (1e-8) to prevent any accidental division by zero
-    reco_train_maxs = torch.clamp(reco_train_maxs, min=1e-8)
+# Add a tiny epsilon (1e-8) to prevent any accidental division by zero
+reco_train_maxs = torch.clamp(reco_train_maxs, min=1e-8)
 
-    # Divide both the sinograms and reconstructions by the reconstruction's max
-    proj_noisy = sinograms / reco_train_maxs
-    images_training = images_training / reco_train_maxs
-
-
-    # --- 3. Per-Image Normalization for Test Set ---
-    reco_test_maxs = images_test.max(dim=2, keepdim=True)[0].max(dim=3, keepdim=True)[0]
-    reco_test_maxs = torch.clamp(reco_test_maxs, min=1e-8)
-
-    proj_noisy_test = sinograms_test / reco_test_maxs
-    images_test = images_test / reco_test_maxs
+# Divide both the sinograms and reconstructions by the reconstruction's max
+proj_noisy = sinograms / reco_train_maxs
+images_training = images_training / reco_train_maxs
 
 
-    # --- 4. Create Datasets ---
-    dataset = torch.utils.data.TensorDataset(
-        proj_noisy, images_training.squeeze()
-    )
+# --- 3. Per-Image Normalization for Test Set ---
+reco_test_maxs = images_test.max(dim=2, keepdim=True)[0].max(dim=3, keepdim=True)[0]
+reco_test_maxs = torch.clamp(reco_test_maxs, min=1e-8)
 
-    dataset_test = torch.utils.data.TensorDataset(
-        proj_noisy_test, images_test.squeeze()
-    )
+proj_noisy_test = sinograms_test / reco_test_maxs
+images_test = images_test / reco_test_maxs
 
-    print('Normalized training images shape:', images_training.shape, flush=True)
-    print('Normalized training sinograms shape:', proj_noisy.shape, flush=True)
+
+# --- 4. Create Datasets ---
+dataset = torch.utils.data.TensorDataset(
+    proj_noisy, images_training.squeeze()
+)
+
+dataset_test = torch.utils.data.TensorDataset(
+    proj_noisy_test, images_test.squeeze()
+)
+
+print('Normalized training images shape:', images_training.shape, flush=True)
+print('Normalized training sinograms shape:', proj_noisy.shape, flush=True)
 
 
 
@@ -326,49 +254,26 @@ if args.method == 'S2I' or 'P2P':
 else:
     N_epochs = 10000
 
-
-
 learning_rate = args.learning_rate
 
-if args.correlated_noise:
-    if 'Sobo' in args.loss_variant:
-        experiment_name = (
-        f"{args.method}_gridsize_{args.grid_size}_loss_"
-        f"{args.loss_variant}_a_{args.a}_s_{args.s}"
-        f"lr_{args.learning_rate}_angles_{args.angles}_random_mask_{args.random_mask}_interpolate_{args.fill_zeros}_noisetype_{args.correlated_noise}_gaussian_std_{args.gaussian_noise_std}"
-    )
-    else:
-        experiment_name = (
-        f"{args.method}_gridsize_{args.grid_size}_loss_one_grad_step_"
-        f"{args.loss_variant}_"
-        f"lr_{args.learning_rate}_angles_{args.angles}_random_mask_{args.random_mask}_interpolate_{args.fill_zeros}_noisetype_{args.correlated_noise}_gaussian_std_{args.gaussian_noise_std}"
-    )
-
-
+if 'Sobo' in args.loss_variant:
+    experiment_name = (
+    f"{args.method}_gridsize_{args.grid_size}_loss_"
+    f"{args.loss_variant}_a_{args.a}_s_{args.s}"
+    f"lr_{args.learning_rate}_angles_{args.angles}_random_mask_{args.random_mask}_interpolate_{args.fill_zeros}_{args.mode}"
+)
 else:
-    if 'Sobo' in args.loss_variant:
-        experiment_name = (
-        f"{args.method}_gridsize_{args.grid_size}_loss_"
-        f"{args.loss_variant}_a_{args.a}_s_{args.s}"
-        f"lr_{args.learning_rate}_angles_{args.angles}_random_mask_{args.random_mask}_interpolate_{args.fill_zeros}_intensity_{args.noise_intensity}"
-    )
-    else:
-        experiment_name = (
-        f"{args.method}_gridsize_{args.grid_size}_loss_one_grad_step_"
-        f"{args.loss_variant}_"
-        f"lr_{args.learning_rate}_angles_{args.angles}_random_mask_{args.random_mask}_interpolate_{args.fill_zeros}_intensity_{args.noise_intensity}"
-    )
-
+    experiment_name = (
+    f"{args.method}_gridsize_{args.grid_size}_loss_one_grad_step_"
+    f"{args.loss_variant}_"
+    f"lr_{args.learning_rate}_angles_{args.angles}_random_mask_{args.random_mask}_interpolate_{args.fill_zeros}_{args.mode}"
+)
 
 # Define output path
 newpath = os.path.join(f"../weights_norm_{mode}/", experiment_name)
-weights_dir = os.path.join(f"../outputs/weights_paper_{args.noise_intensity}_s2i_{mode}", experiment_name)
+weights_dir = os.path.join(f"../outputs/weights_paper_s2i_{mode}", experiment_name)
 # Define TensorBoard log path
-if args.correlated_noise:
-    writer = SummaryWriter(log_dir=os.path.join(f"../tensorboards/tensorboard_correlated_noise_{args.angles}", experiment_name))
-
-else:
-    writer = SummaryWriter(log_dir=os.path.join(f"../tensorboards/tensorboard_ii_{args.angles}_{args.noise_intensity}_random_{args.random_mask}_normalized_{mode}_2xdown_s", experiment_name))
+writer = SummaryWriter(log_dir=os.path.join(f"../tensorboards/tensorboard_ii_{args.angles}_random_{args.random_mask}_normalized_{mode}_2xdown_s", experiment_name))
 
 if not os.path.exists(newpath):
     os.makedirs(newpath)
@@ -385,12 +290,9 @@ if args.method == 'S2I':
     N2I = Sparse2Inverse_p2p(random = args.random_mask, grid_size=args.grid_size, fill_zeros = args.fill_zeros)
 elif args.method == 'P2P':
     N2I = Proj2Proj(random = args.random_mask, grid_size=args.grid_size, fill_zeros = args.fill_zeros)
-else:
-    N2I = Sparse2Inverse_ds_p2p(random = args.random_mask, grid_size=args.grid_size, fill_zeros=args.fill_zeros)
 
 
 N2I_optimizer = optim.Adam(N2I.net_denoising.parameters(), lr=learning_rate)
-
 
 lpips_fn = lpips.LPIPS(net='alex').to(N2I.device)
 lpips_fn.eval()
@@ -525,22 +427,35 @@ for epoch in range(N_epochs):
         max_ssim_ii = max(max_ssim_ii, mean_ssim_ii)
         max_psnr_ii = max(max_psnr_ii, mean_psnr_ii)
         
-        # -------- Save best models --------
-        if epoch > 10 and mean_ssim_p2p > old_ssim_p2p:
+        # SAVE MODELS for p2p (direct inference), s2i (average of two splits), and ii (invariant inference)
+
+        if epoch % 100 == 0:
+            torch.save(N2I.net_denoising.state_dict(),
+                    os.path.join(weights_dir, f"p2p_epoch_{epoch}.pth"))
+
+        elif epoch > 100 and mean_ssim_p2p > old_ssim_p2p:
             old_ssim_p2p = mean_ssim_p2p
             torch.save(N2I.net_denoising.state_dict(),
-                    os.path.join(weights_dir, f"p2p_best_ssim_{epoch}.pth"))
+                    os.path.join(weights_dir, "p2p_best_ssim.pth"))
 
-        if epoch > 10 and mean_ssim_s2i > old_ssim_s2i:
+        if epoch % 100 == 0:
+            torch.save(N2I.net_denoising.state_dict(),
+                    os.path.join(weights_dir, f"s2i_epoch_{epoch}.pth"))
+
+        elif epoch > 100 and mean_ssim_s2i > old_ssim_s2i:
             old_ssim_s2i = mean_ssim_s2i
             torch.save(N2I.net_denoising.state_dict(),
-                    os.path.join(weights_dir, f"s2i_best_ssim_{epoch}.pth"))
-            
-        if epoch > 00 and mean_ssim_ii > old_ssim_ii:
+                    os.path.join(weights_dir, "s2i_best_ssim.pth"))
+
+        if epoch % 100 == 0:
+            torch.save(N2I.net_denoising.state_dict(),
+                    os.path.join(weights_dir, f"ii_epoch_{epoch}.pth"))
+
+        elif epoch > 100 and mean_ssim_ii > old_ssim_ii:
             old_ssim_ii = mean_ssim_ii
             torch.save(N2I.net_denoising.state_dict(),
-                    os.path.join(weights_dir, f"ii_best_ssim_{epoch}.pth"))    
-            
+                    os.path.join(weights_dir, "ii_best_ssim.pth"))
+
 
         # -------- LPIPS (lower is better) --------
         # full_recos_* is typically [B, K, H, W]; we compare channel 0 recon vs GT
@@ -571,22 +486,8 @@ for epoch in range(N_epochs):
         all_lpips_s2i.append(lpips_s2i)
         all_lpips_ii.append(lpips_ii)
 
-        # -------- Save best models --------
-        if epoch > 1000 and mean_psnr_p2p > old_psnr_p2p:
-            old_psnr_p2p = mean_psnr_p2p
-            torch.save(N2I.net_denoising.state_dict(),
-                    os.path.join(weights_dir, f"p2p_best_psnr_{epoch}.pth"))
 
-        if epoch > 1000 and mean_psnr_s2i > old_psnr_s2i:
-            old_psnr_s2i = mean_psnr_s2i
-            torch.save(N2I.net_denoising.state_dict(),
-                    os.path.join(weights_dir, f"s2i_best_psnr_{epoch}.pth"))
-            
-        if epoch > 1000 and mean_psnr_ii > old_psnr_ii:
-            old_psnr_ii = mean_psnr_ii
-            torch.save(N2I.net_denoising.state_dict(),
-                    os.path.join(weights_dir, f"ii_best_psnr_{epoch}.pth"))    
-                    
+                
         fig, axes = plt.subplots(3, 3, figsize=(12, 8))
 
         for row, (Ims, full_recos, Recos, name) in enumerate([
