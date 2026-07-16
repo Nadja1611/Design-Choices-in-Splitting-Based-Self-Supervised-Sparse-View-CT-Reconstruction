@@ -188,9 +188,11 @@ python  run.py -l 'MSE_data' -grid_size 3  --angles 100   --learning_rate 0.0001
 ```
 
 ### P2P: lattice splitting
+```bash
 
 python  run.py -l 'MSE_data' -grid_size 3  --angles 16 --number_training_imgs 1000  --learning_rate 0.0001 -i --method 'P2P' --batch_size 32 --noise_intensity 6000
 python  run.py -l 'MSE_data' -grid_size 3  --angles 100   --learning_rate 0.0001 -i --method 'P2P' --batch_size 4 
+
 ```
 
 ### DoubleSplit / S2I_ds
