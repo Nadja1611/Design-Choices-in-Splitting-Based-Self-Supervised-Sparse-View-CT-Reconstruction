@@ -1,6 +1,6 @@
-# BenchS2I
+# Design Choices for self supervised splitting based approaches for sparse view CT reconstruction
 
-**BenchS2I** is a benchmark and research framework for evaluating and extending
+This is the github repository for the research framework for evaluating and extending
 **splitting-based self-supervised learning methods for sparse-view CT reconstruction**.
 
 The repository provides implementations of:
