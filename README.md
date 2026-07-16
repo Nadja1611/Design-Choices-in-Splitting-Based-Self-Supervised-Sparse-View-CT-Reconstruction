@@ -12,10 +12,25 @@ It includes standardized experimental setups based on the **LoDoPaB-CT dataset**
 
 ##  Dataset Overview
 
-The experiments are based on the **LoDoPaB-CT Dataset**.
+The experiments in folder **lodopab** are based on the **LoDoPaB-CT Dataset**.
 
 Download the dataset here:  
  https://zenodo.org/records/3384092
+
+ or if you want to use reproduces our results exactly:
+ https://drive.google.com/drive/folders/1CyKf-GlcJ0v8jNaRDHmzvdmTyrnI6QBo?usp=drive_link
+
+
+ The experiments in folder **2DeteCT** are based on the **2DeteCT dataset**.
+
+ Download the dataset here:
+
+ or if you want to use reproduces our results exactly:
+ sinograms (mode 1):
+ https://drive.google.com/drive/folders/1YWk3CH6CSc4kEN20zCr2dh462vTQYtDF?usp=sharing
+
+ reconstructions (mode 1): 
+https://drive.google.com/drive/folders/1fsn2fK0liVrvm2kfSeHn8hbwaRs6YV81?usp=drive_link
 
 ###  Data Source
 
