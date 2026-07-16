@@ -156,22 +156,39 @@ or update the path variables in the corresponding training and inference files.
 
 ## Training
 
-### Common arguments
+### Common arguments for Lodopab experiments
 
 | Argument | Description | Default |
 |---|---|---:|
 | `--method` | Splitting method: `S2I`, `P2P`, or `S2I_ds` | `S2I` |
-| `--angles` | Number of projection angles | `16` |
-| `--grid_size` | Detector/lattice splitting grid size | `[3]` |
+| `--angles` | Number of projection angles | `16` or `32` |
+| `--grid_size` | Detector/lattice splitting grid size | `[2] `[3]` or `[4]` |
 | `--number_training_imgs` | Number of training images, where supported | `1000` |
 | `--fill_zeros`, `-i` | fill masked values using linear interpolation | disabled |
 | `--random_mask`, `-r` | Use irregular masking | disabled |
 | `--correlated_noise` | Enable correlated noise, where supported | disabled |
-| `--loss_variant`, `-l` | `MSE_data`, `MSE_image`, or `Sobolev_data` | `Sobolev_data` |
+| `--loss_variant`, `-l` | `MSE_data`, `MSE_image`, or `Sobolev_data` | `MSE_data` |
 | `--a`, `--s` | Sobolev-norm parameters | `10000`, `1` |
 | `--learning_rate`, `-lr` | Learning rate | `1e-4` |
 | `--batch_size` | Training batch size | `32` |
 | `--device` | Training device | `cuda:0` |
+
+
+### Common arguments for 2DeteCT experiments
+
+| Argument | Description | Default |
+|---|---|---:|
+| `--method` | Splitting method: `S2I`, `P2P`, or `S2I_ds` | `S2I` |
+| `--angles` | Number of projection angles | `100` |
+| `--grid_size` | Detector/lattice splitting grid size | `[3]` |
+| `--fill_zeros`, `-i` | fill masked values using linear interpolation | disabled |
+| `--random_mask`, `-r` | Use irregular masking | disabled |
+| `--loss_variant`, `-l` | `MSE_data`, `MSE_image`, or `Sobolev_data` | `MSE_data` |
+| `--a`, `--s` | Sobolev-norm parameters | `10000`, `1` |
+| `--learning_rate`, `-lr` | Learning rate | `1e-4` |
+| `--batch_size` | Training batch size | `4` |
+| `--device` | Training device | `cuda:0` |
+| '--mode' | which mode of 2DeteCT to use | 'mode1' (in this paper) |
 
 Exact options can differ slightly between the LoDoPaB and 2DeteCT scripts.
 Run `python run.py --help` or inspect the argument definitions in the relevant
