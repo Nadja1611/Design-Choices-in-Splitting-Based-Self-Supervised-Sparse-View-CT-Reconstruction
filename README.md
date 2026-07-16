@@ -152,33 +152,22 @@ entry point before launching an experiment.
 Run from either `lodopab/` or `2DeteCT/`:
 
 ```bash
-python run.py \
-    --method S2I \
-    --angles 16 \
-    --fill_zeros \
-    --loss_variant MSE_data
+python  run.py -l 'MSE_data' -grid_size 3  --angles 16 --number_training_imgs 1000  --learning_rate 0.0001 -i --method 'S2I' --batch_size 32 --noise_intensity 6000
+python  run.py -l 'MSE_data' -grid_size 3  --angles 100   --learning_rate 0.0001 -i --method 'S2I' --batch_size 4 
+
 ```
 
 ### P2P: lattice splitting
 
-```bash
-python run.py \
-    --method P2P \
-    --angles 16 \
-    --grid_size 2 \
-    --fill_zeros \
-    --loss_variant MSE_data
+python  run.py -l 'MSE_data' -grid_size 3  --angles 16 --number_training_imgs 1000  --learning_rate 0.0001 -i --method 'P2P' --batch_size 32 --noise_intensity 6000
+python  run.py -l 'MSE_data' -grid_size 3  --angles 100   --learning_rate 0.0001 -i --method 'P2P' --batch_size 4 
 ```
 
 ### DoubleSplit / S2I_ds
 
 ```bash
-python run_doublesplit.py \
-    --method S2I_ds \
-    --loss_variant MSE_data \
-    --grid_size 2 \
-    --angles 16 \
-    --fill_zeros
+python  run_doublesplit.py -l 'MSE_data' -grid_size 3  --angles 16 --number_training_imgs 1000  --learning_rate 0.0001 -i --method 'S2I_ds' --batch_size 32 --noise_intensity 6000
+python  run_doublesplit.py -l 'MSE_data' -grid_size 3  --angles 100  --learning_rate 0.0001 -i --method 'S2I_ds' --batch_size 4 
 ```
 
 To enable correlated noise in scripts that support it, add:
@@ -195,9 +184,10 @@ The tracked inference entry point is located in:
 
 ```text
 2DeteCT/inference.py
+lodopab/inference.py
 ```
 
-Run it from the `2DeteCT/` directory using the same configuration values used
+Run it from the 2detect or lodopab directory using the same configuration values used
 during training. These values are required to reconstruct the experiment name
 and locate the corresponding checkpoint directory.
 
@@ -207,12 +197,13 @@ Example:
 cd 2DeteCT
 
 python inference.py \
-    --method S2I \
+    -l MSE_data \
     --grid_size 3 \
-    --angles 16 \
-    --loss_variant MSE_data \
+    --angles 100 \
     --learning_rate 0.0001 \
-    --fill_zeros
+    -i \
+    --method S2I_ds \
+
 ```
 
 Checkpoint and output paths are constructed by the scripts from the experiment
@@ -222,14 +213,24 @@ training run.
 
 ---
 
+## Paper
+
+This repository accompanies the paper:
+
+**Design Choices in Splitting-Based Self-Supervised Sparse-View CT Reconstruction**  
+Nadja Gruber, Lukas Neumann, Ander Biguri, Gyeongha Hwang, Markus Haltmeier,
+and Johannes Schwab.
+
+- arXiv: https://arxiv.org/abs/2607.10898
+- DOI: https://doi.org/10.48550/arXiv.2607.10898
+
 ## Citation
 
 ```bibtex
-@article{benchs2i,
-  title   = {Benchmark and Extensions of Splitting-based Methods for
-             Self-Supervised Sparse-View CT},
-  author  = {Nadja et al.},
-  journal = {...},
-  year    = {2025}
+@article{gruber2026design,
+  title   = {Design Choices in Splitting-Based Self-Supervised Sparse-View CT Reconstruction},
+  author  = {Gruber, Nadja and Neumann, Lukas and Biguri, Ander and Hwang, Gyeongha and Haltmeier, Markus and Schwab, Johannes},
+  journal = {arXiv preprint arXiv:2607.10898},
+  year    = {2026},
+  doi     = {10.48550/arXiv.2607.10898}
 }
-```
