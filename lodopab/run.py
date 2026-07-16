@@ -51,7 +51,6 @@ parser.add_argument(
     help="which loss variant should be used? Options are MSE_data, MSE_image, Sobolev_data",
     default="Sobolev_data",
 )
-
 parser.add_argument(
     "-a",
     "--a",
@@ -66,9 +65,6 @@ parser.add_argument(
     help="parameter s in sobolev norm",
     default=1.,
 )
-
-
-
 parser.add_argument(
     "-gaussian_noise_std",
     "--gaussian_noise_std",
@@ -83,7 +79,6 @@ parser.add_argument(
     help="number of prosqueuejection angles sinogram",
     default=16,
 )
-
 parser.add_argument(
     "-lr",
     "--learning_rate",
@@ -99,56 +94,41 @@ parser.add_argument(
     default="/home/nadja/Noisier2Inverse_Github/Sparse2Inverse/logs",
 )
 parser.add_argument(
-    "-s_interpolation",
-    "--s_interpolation",
-    type=str,
-    help="should the s interpolation be applied",
-    default="no",
-)
-parser.add_argument(
     "-noise_intensity",
     "--noise_intensity",
     type=float,
     help="The power of noise that is added to the data",
     default=2.,
 )
-
-
 parser.add_argument(
     "--correlated_noise",
     action="store_true",
     help="Enable correlated Poisson noise via 1D convolution along angle dimension"
 )
-
 parser.add_argument(
     "-method",
     "--method",
     type = str,
     help="choose splitting that should be used, S2I , P2P, S2I_ds are the options",
     default = "S2I")
-
-
 parser.add_argument(
     "-inference",
     "--inference",
     type = str,
     help="choose inference strategy",
     default = "S2I")
-
 parser.add_argument(
     "-device",
     "--device",
     type = str,
     help="choose the device which is used for training",
     default = "cuda:0")
-
 parser.add_argument(
     "-batch_size",
     "--batch_size",
     type = int,
     help="batch size used for training",
     default = 32)
-
 parser.add_argument(
     "-grid_size",
     "--grid_size",
@@ -157,30 +137,22 @@ parser.add_argument(
     help="grid size (either one number or multiple for random choice)",
     default=[3]
 )
-
-
 parser.add_argument(
     "-show_images",
     "--show_images",
     type = bool,
     help = "1 to show images and 0 to save them",
     default = False)
-
-
-
 parser.add_argument(
     "-i", "--fill_zeros",
     action="store_true",
     help="enable interpolation in angular direction"
 )
-
-
 parser.add_argument(
     "-r", "--random_mask",
     action="store_true",
     help="enable random masking"
 )
-
 parser.add_argument(
     "-number_training_imgs",
     "--number_training_imgs",
@@ -209,7 +181,7 @@ print('correlated noise ', args.correlated_noise, flush = True)
 '>>-------------------------------------------------------------------------<<'
 
 print('random and fill', args.random_mask, args.fill_zeros, flush = True)
-path = r"/home/nadja/Documents/Projects/gt_pt"
+path = r"../gt_pt"
 images = get_images_from_pt(path, amount_of_images='all', scale_number=1)
 images = rescale_images(images, device, target_size = (np.shape(images)[0],336,336))
 print(images.shape, flush = True)
@@ -228,11 +200,8 @@ sinograms_test = torch.tensor(
 '>>-------------------------------------------------------------------------<<'
 ' Adding noise to the projection data'
 '>>-------------------------------------------------------------------------<<'
-
-
 proj_noisy = sinograms
 proj_noisy_test = sinograms_test
-
 '>>-------------------------------------------------------------------------<<'
 ' Generating dataset'
 '>>-------------------------------------------------------------------------<<'
@@ -240,25 +209,17 @@ proj_noisy_test = sinograms_test
 dataset = torch.utils.data.TensorDataset(
     proj_noisy, images_training
 )
-
-
 dataset_test = torch.utils.data.TensorDataset(
     proj_noisy_test, images_test
 )
 Data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 Data_loader_test = DataLoader(dataset_test, batch_size=batch_size, shuffle=False)
 
-
 '>>-------------------------------------------------------------------------<<'
 'Define training details and prepare output folders / tensorboard'
 '>>-------------------------------------------------------------------------<<'
 
-if args.method == 'S2I' or 'P2P':
-    N_epochs = 6000
-else:
-    N_epochs = 10000
-
-
+N_epochs = 6000
 
 learning_rate = args.learning_rate
 
@@ -317,8 +278,7 @@ if args.method == 'S2I':
     N2I = Sparse2Inverse_p2p(random = args.random_mask, grid_size=args.grid_size, fill_zeros = args.fill_zeros)
 elif args.method == 'P2P':
     N2I = Proj2Proj(random = args.random_mask, grid_size=args.grid_size, fill_zeros = args.fill_zeros)
-else:
-    N2I = Sparse2Inverse_ds_p2p(random = args.random_mask, grid_size=args.grid_size, fill_zeros=args.fill_zeros)
+
 
 
 N2I_optimizer = optim.Adam(N2I.net_denoising.parameters(), lr=learning_rate)
